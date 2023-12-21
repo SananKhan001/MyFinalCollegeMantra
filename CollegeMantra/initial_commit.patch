@@ -1,0 +1,949 @@
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UpdateStudentController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UpdateStudentController.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UpdateStudentController.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UpdateStudentController.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UpdateStudentController.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -1,12 +1,11 @@
+ package CollegeHelp.College_Mantra.controller;
+ 
++import CollegeHelp.College_Mantra.enums.ProductStatus;
+ import CollegeHelp.College_Mantra.enums.RequestStatus;
+ import CollegeHelp.College_Mantra.exceptions.InvalidIdException;
+ import CollegeHelp.College_Mantra.model.User;
+-import CollegeHelp.College_Mantra.request.MessProductCartCreateRequest;
+-import CollegeHelp.College_Mantra.request.MessReputationCreateRequest;
+-import CollegeHelp.College_Mantra.request.ReputationCreateRequest;
+-import CollegeHelp.College_Mantra.request.ServiceProviderReputationCreateRequest;
++import CollegeHelp.College_Mantra.repository.ProductRepository;
++import CollegeHelp.College_Mantra.request.*;
+ import CollegeHelp.College_Mantra.service.StudentService;
+ import com.razorpay.RazorpayException;
+ import org.apache.coyote.Response;
+@@ -30,6 +29,8 @@
+ 
+     @Autowired
+     private StudentService studentService;
++    @Autowired
++    private ProductRepository productRepository;
+ 
+     // localhost:8080/student/upload/photo
+     @PostMapping("/upload/photo")
+@@ -328,4 +329,95 @@
+                 .body(studentService.giveReputationToMess(id,messReputationCreateRequest));
+     }
+ 
++    // localhost:8080/student/add/product
++    @PostMapping("/add/product")
++    public ResponseEntity addProduct(@ModelAttribute @Valid ProductCreateRequest productCreateRequest){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.addProduct(id,productCreateRequest));
++    }
++
++    // localhost:8080/student/get/posted/products
++    @GetMapping("/get/posted/products")
++    public ResponseEntity getPostedProducts(@RequestParam("product_status") ProductStatus productStatus){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.getPostedProducts(id,productStatus));
++    }
++
++    // localhost:8080/student/update/posted/product
++    @PostMapping("/update/posted/product")
++    public ResponseEntity updatePostedProduct(@RequestParam("product_id") Long productId,@ModelAttribute @Valid ProductCreateRequest productCreateRequest){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.updatePostedProduct(id,productId,productCreateRequest));
++    }
++
++    // localhost:8080/student/delete/posted/product
++    @PostMapping("/delete/posted/product")
++    public ResponseEntity deletePostedProduct(@RequestParam("product_id") Long productId){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.deletePostedProduct(id,productId));
++    }
++
++    // localhost:8080/student/add/razorpay
++    @PostMapping("/add/razorpay")
++    public ResponseEntity addRazorpay(@RequestParam("key_id") String keyId,@RequestParam("key_secret") String keySecret){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.addRazorpay(id,keyId,keySecret));
++    }
++
++    // localhost:8080/student/buy/product
++    @PostMapping("/buy/product")
++    public ResponseEntity buyProduct(@RequestParam("product_id") Long productId) throws RazorpayException {
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.buyProduct(id,productId));
++    }
++
++    // localhost:8080/student/get/bought/product/list
++    @GetMapping("/get/bought/product/list")
++    public ResponseEntity getBoughtProductList(){
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        User myUser = (User) authentication.getPrincipal();
++
++        Long id = myUser.getStudent().getId();
++
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(studentService.getBoughtProductList(id));
++    }
++
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UserController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UserController.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UserController.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UserController.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/controller/UserController.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -1,6 +1,7 @@
+ package CollegeHelp.College_Mantra.controller;
+ 
+ import CollegeHelp.College_Mantra.enums.City;
++import CollegeHelp.College_Mantra.enums.ProductType;
+ import CollegeHelp.College_Mantra.enums.RoomType;
+ import CollegeHelp.College_Mantra.enums.ServiceType;
+ import CollegeHelp.College_Mantra.model.User;
+@@ -208,4 +209,24 @@
+                 .body(userService.getServiceList(collegeId,city,serviceType));
+     }
+ 
++    // localhost:8080/user/get/student/product/byId
++    @GetMapping("/get/student/product/byId")
++    public ResponseEntity getProductById(@RequestParam("product_id") Long productId){
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(userService.getProductById(productId));
++    }
++
++    // localhost:8080/user/get/student/product/list
++    @GetMapping("/get/student/product/list")
++    public ResponseEntity getStudentProductList(@RequestParam(value = "product_type",required = false) ProductType productType,
++                                         @RequestParam(value = "range",required = false) Integer range,
++                                         @RequestParam(value = "college_id",required = false) Long collegeId){
++        return ResponseEntity
++                .status(HttpStatus.OK)
++                .body(userService.getStudentProductList(productType,range,collegeId));
++    }
++
++
++
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductStatus.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductStatus.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductStatus.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductStatus.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,8 @@
++package CollegeHelp.College_Mantra.enums;
++
++public enum ProductStatus {
++
++    SOLD_OUT,
++    IN_STOCK,
++
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductType.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductType.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductType.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/enums/ProductType.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,15 @@
++package CollegeHelp.College_Mantra.enums;
++
++public enum ProductType {
++
++    TABLE,
++    CHAIR,
++    MATTRESS,
++    FAN,
++    BOOK,
++    PHONE,
++    LAPTOP,
++    CAMERA,
++    OTHER
++
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/files/ProfileImage.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/files/ProfileImage.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/files/ProfileImage.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/files/ProfileImage.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/files/ProfileImage.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -40,6 +40,11 @@
+     @JsonIgnore
+     private Room room;
+ 
++    @ManyToOne
++    @JoinColumn
++    @JsonIgnore
++    private Product product;
++
+     private String type;
+ 
+     @Column(unique = true,nullable = false)
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/handlerConfig/HandleConf.java
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/handlerConfig/HandleConf.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/handlerConfig/HandleConf.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/handlerConfig/HandleConf.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/handlerConfig/HandleConf.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -15,6 +15,7 @@
+ 
+ import java.sql.SQLIntegrityConstraintViolationException;
+ import java.util.List;
++import java.util.NoSuchElementException;
+ import java.util.stream.Collectors;
+ 
+ @ControllerAdvice
+@@ -76,4 +77,19 @@
+                 .status(HttpStatus.BAD_REQUEST)
+                 .body(ex.getMessage());
+     }
++
++    @ExceptionHandler(NullPointerException.class)
++    public ResponseEntity handleNullPointerException(NullPointerException ex){
++        return ResponseEntity
++                .status(HttpStatus.BAD_REQUEST)
++                .body(ex.getMessage());
++    }
++
++    @ExceptionHandler(NoSuchElementException.class)
++    public ResponseEntity handleNoSuchElementException(NoSuchElementException ex){
++        return ResponseEntity
++                .status(HttpStatus.BAD_REQUEST)
++                .body(ex.getMessage());
++    }
++
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/College.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/College.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/College.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/College.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/College.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -57,6 +57,10 @@
+     @JsonIgnore
+     private List<RoomService> roomServiceList;
+ 
++    @OneToMany(mappedBy = "college")
++    @JsonIgnore
++    private List<Product> productList;
++
+     @CreationTimestamp
+     private Date createDate;
+ 
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Product.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Product.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Product.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Product.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,84 @@
++package CollegeHelp.College_Mantra.model;
++
++import CollegeHelp.College_Mantra.enums.ProductStatus;
++import CollegeHelp.College_Mantra.enums.ProductType;
++import CollegeHelp.College_Mantra.files.ProfileImage;
++import CollegeHelp.College_Mantra.response.ProductResponse;
++import CollegeHelp.College_Mantra.service.DownloadImage;
++import com.fasterxml.jackson.annotation.JsonIgnore;
++import lombok.*;
++import org.springframework.context.annotation.Profile;
++
++import javax.persistence.*;
++import java.io.Serializable;
++import java.util.List;
++import java.util.stream.Collectors;
++
++@Entity
++@Getter
++@Setter
++@Builder
++@AllArgsConstructor
++@NoArgsConstructor
++public class Product implements Serializable {
++
++    @Id
++    @GeneratedValue(strategy = GenerationType.IDENTITY)
++    private Long id;
++
++    @Enumerated(EnumType.STRING)
++    @Column(nullable = false)
++    private ProductStatus productStatus; //
++
++    @Enumerated(EnumType.STRING)
++    @Column(nullable = false)
++    protected ProductType productType; //
++
++    @Column(nullable = false)
++    private String name; //
++
++    @Column(nullable = false)
++    private int price; //
++
++    @ManyToOne
++    @JoinColumn
++    @JsonIgnore
++    private College college;
++
++    @Column(nullable = false)
++    private String description; //
++
++    @ManyToOne
++    @JoinColumn
++    @JsonIgnore
++    private Student seller;
++
++    @ManyToOne
++    @JoinColumn
++    @JsonIgnore
++    private Student buyer;
++
++    @OneToMany(mappedBy = "product")
++    @JsonIgnore
++    private List<ProfileImage> profileImageList;
++
++    public ProductResponse to(){
++        return ProductResponse.builder()
++                .id(this.id)
++                .productStatus(this.productStatus)
++                .name(this.name)
++                .price(this.price)
++                .collegeResponse(this.college.to())
++                .description(this.description)
++                .sellerUserId(this.seller.getUser().getId())
++                .sellerName(this.seller.getName())
++                .productType(this.productType)
++                .images(
++                        profileImageList.stream()
++                                .map(x -> DownloadImage.generateImgUri(x.getName()))
++                                .collect(Collectors.toList())
++                )
++                .build();
++    }
++
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Student.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Student.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Student.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Student.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/model/Student.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -4,6 +4,7 @@
+ import CollegeHelp.College_Mantra.response.UserResponse;
+ import CollegeHelp.College_Mantra.service.DownloadImage;
+ import com.fasterxml.jackson.annotation.JsonIgnore;
++import com.fasterxml.jackson.databind.annotation.JsonNaming;
+ import lombok.*;
+ import org.hibernate.annotations.CreationTimestamp;
+ import org.hibernate.annotations.UpdateTimestamp;
+@@ -36,6 +37,10 @@
+     @Column(name = "phone_number",unique = true,nullable = false)
+     private String phoneNumber;
+ 
++    private String keyId;
++
++    private String keySecret;
++
+     @JoinColumn(name = "profile_photo")
+     @OneToOne
+     @JsonIgnore
+@@ -94,6 +99,14 @@
+     @JsonIgnore
+     private List<ServiceTransaction> serviceTransactions;
+ 
++    @OneToMany(mappedBy = "seller")
++    @JsonIgnore
++    private List<Product> addedProducts;
++
++    @OneToMany(mappedBy = "buyer")
++    @JsonIgnore
++    private List<Product> boughtProducts;
++
+     @CreationTimestamp
+     private Date createDate;
+ 
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProductRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProductRepository.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProductRepository.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProductRepository.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,31 @@
++package CollegeHelp.College_Mantra.repository;
++
++import CollegeHelp.College_Mantra.enums.ProductStatus;
++import CollegeHelp.College_Mantra.enums.ProductType;
++import CollegeHelp.College_Mantra.model.College;
++import CollegeHelp.College_Mantra.model.Product;
++import CollegeHelp.College_Mantra.model.Student;
++import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.stereotype.Repository;
++
++import java.util.Arrays;
++import java.util.List;
++
++@Repository
++public interface ProductRepository extends JpaRepository<Product,Long> {
++    List<Product> findBySellerAndProductStatus(Student student, ProductStatus productStatus);
++
++    List<Product> findByProductTypeAndPriceLessThanEqualAndCollegeAndProductStatus(ProductType productType, Integer range, College college, ProductStatus inStock);
++
++    List<Product> findByProductTypeAndPriceLessThanEqualAndProductStatus(ProductType productType, Integer range, ProductStatus inStock);
++
++    List<Product> findByProductTypeAndCollegeAndProductStatus(ProductType productType, College college, ProductStatus inStock);
++
++    List<Product> findByPriceLessThanEqualAndCollegeAndProductStatus(Integer range, College college, ProductStatus inStock);
++
++    List<Product> findByProductTypeAndProductStatus(ProductType productType, ProductStatus inStock);
++
++    List<Product> findByPriceLessThanEqualAndProductStatus(Integer range, ProductStatus inStock);
++
++    List<Product> findByCollegeAndProductStatus(College college, ProductStatus inStock);
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProfileImageRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProfileImageRepository.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProfileImageRepository.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProfileImageRepository.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/ProfileImageRepository.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -1,9 +1,15 @@
+ package CollegeHelp.College_Mantra.repository;
+ 
++import CollegeHelp.College_Mantra.enums.ProductStatus;
+ import CollegeHelp.College_Mantra.files.ProfileImage;
++import CollegeHelp.College_Mantra.model.Product;
++import CollegeHelp.College_Mantra.model.Student;
++import CollegeHelp.College_Mantra.response.ProductResponse;
+ import org.springframework.data.jpa.repository.JpaRepository;
+ import org.springframework.stereotype.Repository;
+ 
++import java.util.List;
++
+ @Repository
+ public interface ProfileImageRepository extends JpaRepository<ProfileImage,Long> {
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomHonourRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomHonourRepository.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomOwnerRepository.java
+rename from College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomHonourRepository.java
+rename to College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomOwnerRepository.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomHonourRepository.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/repository/RoomOwnerRepository.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -8,7 +8,7 @@
+ import java.util.List;
+ 
+ @Repository
+-public interface RoomHonourRepository extends JpaRepository<RoomOwner,Long> {
++public interface RoomOwnerRepository extends JpaRepository<RoomOwner,Long> {
+     List<RoomOwner> findByNameStartingWithAndCollege(String name, College college);
+ 
+     List<RoomOwner> findByNameStartingWith(String name);
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/request/ProductCreateRequest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/request/ProductCreateRequest.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/request/ProductCreateRequest.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/request/ProductCreateRequest.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,44 @@
++package CollegeHelp.College_Mantra.request;
++
++import CollegeHelp.College_Mantra.enums.ProductStatus;
++import CollegeHelp.College_Mantra.enums.ProductType;
++import CollegeHelp.College_Mantra.model.Product;
++import lombok.Builder;
++import lombok.Getter;
++import lombok.Setter;
++import org.springframework.web.multipart.MultipartFile;
++
++import javax.validation.constraints.NotBlank;
++import javax.validation.constraints.NotNull;
++import java.util.List;
++
++@Builder
++@Getter
++@Setter
++public class ProductCreateRequest {
++
++    @NotBlank(message = "Name Shouldn't Be Blank")
++    private String name;
++
++    @NotNull(message = "Price Shouldn't Be Null")
++    private int price;
++
++    @NotBlank(message = "Description Shouldn't Be Blank")
++    private String description;
++
++    @NotNull(message = "Select A Product Type")
++    private ProductType productType;
++
++    private List<MultipartFile> images;
++
++    public Product to(){
++        return Product.builder()
++                .name(this.name)
++                .price(this.price)
++                .description(this.description)
++                .productStatus(ProductStatus.IN_STOCK)
++                .productType(this.productType)
++                .build();
++    }
++
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/response/ProductResponse.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/response/ProductResponse.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/response/ProductResponse.java
+new file mode 100644
+--- /dev/null	(revision 62112a676337e9035e0ceca539199a078baeac18)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/response/ProductResponse.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -0,0 +1,25 @@
++package CollegeHelp.College_Mantra.response;
++
++import CollegeHelp.College_Mantra.enums.ProductStatus;
++import CollegeHelp.College_Mantra.enums.ProductType;
++import lombok.Builder;
++import lombok.Data;
++
++import java.util.List;
++
++@Data
++@Builder
++public class ProductResponse {
++
++    private Long id;
++    private ProductType productType;
++    private ProductStatus productStatus;
++    private String name;
++    private int price;
++    private CollegeResponse collegeResponse;
++    private String description;
++    private Long sellerUserId;
++    private String sellerName;
++    private List<String> images;
++
++}
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomOwnerService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomOwnerService.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomOwnerService.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomOwnerService.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomOwnerService.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -50,7 +50,7 @@
+     private MyUserDetailsService myUserDetailsService;
+ 
+     @Autowired
+-    private RoomHonourRepository roomHonourRepository;
++    private RoomOwnerRepository roomHonourRepository;
+ 
+     @Autowired
+     private ProfileImageRepository profileImageRepository;
+@@ -440,13 +440,13 @@
+         RoomOwner roomOwner = roomHonourRepository.findById(id).get();
+         Relation relation = relationRepository.findById(reputationCreateRequest.getRelationId()).get();
+ 
+-        if(!relation.getRoomOwner().equals(roomOwner)){
++        if (!relation.getRoomOwner().equals(roomOwner)) {
+             throw new InvalidRequestStateException("Invalid Action");
+         }
+ 
+-        Reputation reputation = reputationRepository.findByUser1AndUser2(roomOwner.getUser(),relation.getStudent().getUser());
++        Reputation reputation = reputationRepository.findByUser1AndUser2(roomOwner.getUser(), relation.getStudent().getUser());
+ 
+-        if(reputation != null){
++        if (reputation != null) {
+             throw new InvalidRequestStateException("Invalid Action");
+         }
+ 
+@@ -468,7 +468,7 @@
+         total += reputation.getRating();
+         number++;
+ 
+-        currRating = total/number;
++        currRating = total / number;
+ 
+         student.setRating(currRating);
+         student.setNumberOfReputations(number);
+@@ -477,4 +477,5 @@
+ 
+         return reputation.to();
+     }
++
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomService.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomService.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomService.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/RoomService.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -3,9 +3,8 @@
+ import CollegeHelp.College_Mantra.files.ProfileImage;
+ import CollegeHelp.College_Mantra.model.Room;
+ import CollegeHelp.College_Mantra.model.RoomOwner;
+-import CollegeHelp.College_Mantra.repository.CollegeRepository;
+ import CollegeHelp.College_Mantra.repository.ProfileImageRepository;
+-import CollegeHelp.College_Mantra.repository.RoomHonourRepository;
++import CollegeHelp.College_Mantra.repository.RoomOwnerRepository;
+ import CollegeHelp.College_Mantra.repository.RoomRepository;
+ import CollegeHelp.College_Mantra.request.RoomCreateRequest;
+ import CollegeHelp.College_Mantra.response.RoomResponse;
+@@ -26,7 +25,7 @@
+     private static final String FOLDER_PATH = "D:\\Java-Backend-Projects\\College_Mantra\\College_Mantra\\src\\main\\resources\\profilePhotos\\";
+ 
+     @Autowired
+-    private RoomHonourRepository roomHonourRepository;
++    private RoomOwnerRepository roomHonourRepository;
+ 
+     @Autowired
+     private ProfileImageRepository profileImageRepository;
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/StudentService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/StudentService.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/StudentService.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/StudentService.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/StudentService.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -1,9 +1,6 @@
+ package CollegeHelp.College_Mantra.service;
+ 
+-import CollegeHelp.College_Mantra.enums.Authority;
+-import CollegeHelp.College_Mantra.enums.AvailabilityType;
+-import CollegeHelp.College_Mantra.enums.RelationStatus;
+-import CollegeHelp.College_Mantra.enums.RequestStatus;
++import CollegeHelp.College_Mantra.enums.*;
+ import CollegeHelp.College_Mantra.exceptions.InvalidIdException;
+ import CollegeHelp.College_Mantra.files.ProfileImage;
+ import CollegeHelp.College_Mantra.model.*;
+@@ -20,6 +17,8 @@
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.beans.factory.annotation.Value;
++import org.springframework.security.core.Authentication;
++import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.stereotype.Service;
+ import org.springframework.web.multipart.MultipartFile;
+ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+@@ -87,9 +86,11 @@
+     @Autowired
+     private ReputationRepository reputationRepository;
+     @Autowired
+-    private RoomHonourRepository roomHonourRepository;
++    private RoomOwnerRepository roomHonourRepository;
+     @Autowired
+     private ServiceProviderRepository serviceProviderRepository;
++    @Autowired
++    private ProductRepository productRepository;
+ 
+     public void setInCache(StudentCreateRequest studentCreateRequest) {
+ 
+@@ -710,4 +711,162 @@
+         return reputation.to();
+     }
+ 
++    private List<ProfileImage> uploadImages(List<MultipartFile> multipartFileList,Product product) {
++
++        return (List<ProfileImage>) multipartFileList.stream()
++                .map(x -> {
++                    try {
++                        x.transferTo(new File(folderPath + x.getOriginalFilename()));
++                    } catch (IOException e) {
++                        throw new RuntimeException(e);
++                    }
++                    return ProfileImage.builder()
++                            .product(product)
++                            .type(x.getContentType())
++                            .name(x.getOriginalFilename())
++                            .filePath(folderPath + x.getOriginalFilename())
++                            .build();
++                }).collect(Collectors.toList());
++
++    }
++
++    public boolean addProduct(Long id, ProductCreateRequest productCreateRequest) {
++
++        Student student = studentRepository.findById(id).get();
++
++        Product product = productCreateRequest.to();
++
++        product.setCollege(student.getCollege());
++        product.setSeller(student);
++
++        List<ProfileImage> images = new ArrayList<>();
++
++        if(productCreateRequest.getImages() == null || productCreateRequest.getImages().isEmpty()){
++            images = uploadImages(productCreateRequest.getImages(),product);
++        }
++
++        product = productRepository.save(product);
++        profileImageRepository.saveAll(images);
++
++        return true;
++
++    }
++
++    public List<ProductResponse> getPostedProducts(Long id, ProductStatus productStatus) {
++        Student student = studentRepository.findById(id).get();
++
++        return productRepository.findBySellerAndProductStatus(student,productStatus)
++                .stream()
++                .map(x -> x.to())
++                .collect(Collectors.toList());
++    }
++
++    public boolean updatePostedProduct(Long id, Long productId, ProductCreateRequest productCreateRequest) {
++        Student student = studentRepository.findById(id).get();
++        Product product = productRepository.findById(productId).get();
++
++        if(product.getSeller().equals(student)){
++
++            List<ProfileImage> existingImg = product.getProfileImageList();
++
++            existingImg.stream()
++                    .forEach(x -> {
++                        profileImageRepository.deleteById(x.getId());
++                        File file = new File(x.getFilePath());
++                        file.delete();
++                    });
++
++            Product product1 = productCreateRequest.to();
++            product1.setId(productId);
++            product1.setSeller(student);
++            product1.setCollege(student.getCollege());
++            product1.setProductStatus(product.getProductStatus());
++
++            List<ProfileImage> images = uploadImages(productCreateRequest.getImages(),product1);
++
++            productRepository.save(product1);
++            profileImageRepository.saveAll(images);
++
++            return true;
++
++        }
++
++        return false;
++    }
++
++    public boolean deletePostedProduct(Long id, Long productId) {
++        Student student = studentRepository.findById(id).get();
++        Product product = productRepository.findById(productId).get();
++
++        if(product.getSeller().equals(student) && product.getBuyer() == null){
++            List<ProfileImage> existingImg = product.getProfileImageList();
++
++            existingImg.stream()
++                    .forEach(x -> {
++                        profileImageRepository.deleteById(x.getId());
++                        File file = new File(x.getFilePath());
++                        file.delete();
++                    });
++
++            productRepository.deleteById(productId);
++            return true;
++        }
++
++        return false;
++    }
++
++    public boolean addRazorpay(Long id,String keyId, String keySecret) {
++        Student student = studentRepository.findById(id).get();
++
++        student.setKeyId(keyId);
++        student.setKeySecret(keySecret);
++
++        studentRepository.save(student);
++
++        return true;
++    }
++
++    public String buyProduct(Long id, Long productId) throws RazorpayException {
++        Student student = studentRepository.findById(id).get();
++
++        Product product = productRepository.findById(productId).get();
++
++        if(product.getProductStatus().equals(ProductStatus.SOLD_OUT) ||
++                product.getSeller().getKeyId() == null ||
++                product.getSeller().getKeySecret() == null){
++            throw new InvalidRequestStateException("Product Not Available");
++        }
++
++
++        RazorpayClient razorpay = new RazorpayClient(product.getSeller().getKeyId(), product.getSeller().getKeySecret());
++
++        JSONObject options = new JSONObject();
++        options.put("amount", product.getPrice()*100);
++        options.put("currency", "INR");
++        options.put("receipt", product.getId().toString());
++
++        JSONObject notes = new JSONObject();
++        notes.put("key",product.getSeller().getKeyId());
++        notes.put("name",product.getSeller().getName());
++        notes.put("address",student.getAddress());
++        options.put("notes",notes);
++
++        Order order = razorpay.Orders.create(options);
++
++        product.setProductStatus(ProductStatus.SOLD_OUT);
++        product.setBuyer(student);
++
++        productRepository.save(product);
++
++        return order.toString();
++    }
++
++    public List<ProductResponse> getBoughtProductList(Long id) {
++        Student student = studentRepository.findById(id).get();
++
++        return student.getBoughtProducts()
++                .stream()
++                .map(x -> x.to())
++                .collect(Collectors.toList());
++    }
+ }
+Index: College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/UserService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/UserService.java b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/UserService.java
+--- a/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/UserService.java	(revision c1786fde692452a37af507b6482c357a72678e7c)
++++ b/College_Mantra/src/main/java/CollegeHelp/College_Mantra/service/UserService.java	(revision 62112a676337e9035e0ceca539199a078baeac18)
+@@ -6,7 +6,6 @@
+ import CollegeHelp.College_Mantra.repository.*;
+ import CollegeHelp.College_Mantra.response.*;
+ import com.sun.jdi.request.InvalidRequestStateException;
+-import io.netty.util.internal.StringUtil;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
+@@ -14,7 +13,6 @@
+ import org.springframework.stereotype.Service;
+ import org.springframework.util.StringUtils;
+ 
+-import javax.print.DocFlavor;
+ import java.io.IOException;
+ import java.io.Serializable;
+ import java.util.ArrayList;
+@@ -71,7 +69,9 @@
+     @Autowired
+     private TransactionRepository transactionRepository;
+     @Autowired
+-    private RoomHonourRepository roomHonourRepository;
++    private RoomOwnerRepository roomHonourRepository;
++    @Autowired
++    private ProductRepository productRepository;
+ 
+     public Object findById(Long id) throws IOException {
+         Optional<User> optionalUser = myUserRepository.findById(id);
+@@ -393,6 +393,38 @@
+                     }
+                 })
+                 .collect(Collectors.toList());
++
++    }
++
++    public ProductResponse getProductById(Long productId) {
++        return productRepository.findById(productId).get().to();
++    }
++
++    public List<ProductResponse> getStudentProductList(ProductType productType, Integer range, Long collegeId) {
++
++        List<Product> products = new ArrayList<>();
++
++        if(productType != null && range != null && collegeId != null){
++            products = productRepository.findByProductTypeAndPriceLessThanEqualAndCollegeAndProductStatus(productType,range,collegeRepository.findById(collegeId).get(),ProductStatus.IN_STOCK);
++        } else if (productType != null && range != null) {
++            products = productRepository.findByProductTypeAndPriceLessThanEqualAndProductStatus(productType,range,ProductStatus.IN_STOCK);
++        } else if (productType != null && collegeId != null) {
++            products = productRepository.findByProductTypeAndCollegeAndProductStatus(productType,collegeRepository.findById(collegeId).get(),ProductStatus.IN_STOCK);
++        } else if (range != null && collegeId != null) {
++            products = productRepository.findByPriceLessThanEqualAndCollegeAndProductStatus(range,collegeRepository.findById(collegeId).get(),ProductStatus.IN_STOCK);
++        } else if (productType != null) {
++            products = productRepository.findByProductTypeAndProductStatus(productType,ProductStatus.IN_STOCK);
++        } else if (range != null) {
++            products = productRepository.findByPriceLessThanEqualAndProductStatus(range,ProductStatus.IN_STOCK);
++        } else if (collegeId != null) {
++            products = productRepository.findByCollegeAndProductStatus(collegeRepository.findById(collegeId).get(),ProductStatus.IN_STOCK);
++        }
++        else products = productRepository.findAll();
++
++        return products
++                .stream()
++                .map(x -> x.to())
++                .collect(Collectors.toList());
+ 
+     }
+ }
